@@ -8,7 +8,6 @@
 
 int main()
 {
-    State8080* cpu = new State8080();
     unsigned char* mainRam = (unsigned char*)malloc(0x2000);
     std::string fileName;
 
@@ -23,11 +22,13 @@ int main()
 
     unsigned char* buffer = (unsigned char*)malloc(fsize);
     file.read((char*)buffer, fsize);
+
+    State8080* cpu = new State8080(fsize);
     cpu->InitCPU();
 
     unsigned int programCounter = 0;
     std::cout << "Beginning Program" << std::endl;
-    for(int i = 0; i < 10; i++)
+    for(int i = 0; i < 25; i++)
     {
         cpu->RunInstruction(buffer, mainRam);
         programCounter += 1;

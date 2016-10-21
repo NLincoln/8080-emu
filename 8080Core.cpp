@@ -8,6 +8,12 @@ std::string State8080::GetOpcode(unsigned char opcode)
 State8080::State8080()
 {
     instruction = new unsigned char[3];
+    romDataSize = 0;
+}
+State8080::State8080(unsigned int romSize)
+{
+    instruction = new unsigned char[3];
+    romDataSize = romSize;
 }
 void State8080::InitCPU()
 {
@@ -31,12 +37,29 @@ void State8080::RunInstruction(const unsigned char *data, unsigned char *memory)
     //Increment pc before instruction in case of JMP
     pc++;
 
-    std::cout<<GetOpcode(instruction[0]);
+    std::cout<<GetOpcode(instruction[0])
+             << std::endl;
 
     //Go to the proper instruction
     switch(instruction[0])
     {
         case(0x00):
+            break;
+        case(0x01):
+        case(0x11):
+        case(0x21):
+        case(0x31):
+            LXI(instruction);
+            break;
+        case(0x06):
+        case(0x0e):
+        case(0x16):
+        case(0x1e):
+        case(0x26):
+        case(0x2e):
+        case(0x36):
+        case(0x3e):
+            MVI(instruction, memory);
             break;
         case(0x40):
         case(0x41):
@@ -106,6 +129,12 @@ void State8080::RunInstruction(const unsigned char *data, unsigned char *memory)
         case(0xc3):
             JMP(instruction);
             break;
+        case(0xcd):
+        case(0xdd):
+        case(0xed):
+        case(0xfd):
+            CALL(instruction, memory);
+            break;
         default:
             UnimplementedInstruction();
             break;
@@ -120,12 +149,62 @@ void State8080::UnimplementedInstruction() {
     exit(1);
 }
 
+void State8080::CALL(const unsigned char *instruction, unsigned char *memory) {
+    unsigned char lowAddress = instruction[1];
+    unsigned char highAddress = instruction[2];
+
+    std::cout << "Stack pointer is " << sp << std::endl;
+    std::cout << "Low address is " << (int)lowAddress << std::endl;
+    std::cout << "High address is " << (int)highAddress << std::endl;
+    //Push the program counter onto the stack
+    pc += 2; //3 byte instruction
+    memory[sp - romDataSize] = pc & 0b00001111;
+    sp--;
+    memory[sp - romDataSize] = pc & 0b11110000;
+
+    pc = lowAddress;
+    pc += highAddress * 256;
+
+    std::cout << "Program counter is: " << pc << std::endl;
+
+    return;
+
+}
 void State8080::JMP(const unsigned char* instruction)
 {
     unsigned int newPC = 0;
     newPC += instruction[1];
     newPC += instruction[2] * 256;
     pc = newPC;
+    return;
+}
+
+void State8080::LXI(const unsigned char *instruction) {
+    unsigned char targetRegPair = instruction[0]; //Register pair to write to
+    unsigned char lowData = instruction[1];
+    unsigned char highData = instruction[2];
+
+    switch(targetRegPair)
+    {
+        case(0x01): //B/C
+            reg_B = lowData;
+            reg_C = highData;
+            break;
+        case(0x11): //D/E
+            reg_D = lowData;
+            reg_E = highData;
+            break;
+        case(0x21): //H/L
+            reg_H = lowData;
+            reg_L = highData;
+            break;
+        case(0x31): //SP
+            sp = lowData;
+            sp += highData * 256;
+            break;
+    }
+
+    pc += 2; //3 byte instruction
     return;
 }
 
@@ -247,5 +326,45 @@ void State8080::MOV(const unsigned char *instruction, unsigned char *memory)
         }
 
     }
+
+    return;
+}
+
+void State8080::MVI(const unsigned char *instruction, unsigned char *memory) {
+    unsigned char dest = instruction[0];
+    unsigned char data = instruction[1];
+    unsigned int memAddress;
+    switch(dest)
+    {
+        case(0x06): //B
+            reg_B = data;
+            break;
+        case(0x0e): //C
+            reg_C = data;
+            break;
+        case(0x16): //D
+            reg_D = data;
+            break;
+        case(0x1e): //E
+            reg_E = data;
+            break;
+        case(0x26): //H
+            reg_H = data;
+            break;
+        case(0x2e): //L
+            reg_L = data;
+            break;
+        case(0x36): //M
+            memAddress = reg_L;
+            memAddress = reg_H * (unsigned int)256;
+            memory[memAddress] = data;
+            break;
+        case(0x3e): //A
+            reg_A = data;
+            break;
+    }
+
+    pc++; //2 byte instruction
+    return;
 }
 

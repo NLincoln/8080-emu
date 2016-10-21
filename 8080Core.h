@@ -17,6 +17,7 @@ private:
     unsigned char reg_L;
     unsigned char reg_PSW;
     unsigned int pc;
+    unsigned int sp;
     bool flagSign;
     bool flagZero;
     bool flagAuxCarry;
@@ -24,7 +25,7 @@ private:
     bool flagCarry;
 
     unsigned char* instruction; //Instruction with operands that will be processed
-
+    unsigned int romDataSize; //Size of rom file to offset stack pointer with
 
     const std::vector<std::string> OPCODES = {
             "NOP",
@@ -287,15 +288,20 @@ private:
     };
 
 
-
+    void CALL(const unsigned char *instruction, unsigned char* memory);
 
     //instruction: 3 byte JMP instruction
     void JMP(const unsigned char *instruction);
 
+    //instruction: 3 byte LXI instruction
+    void LXI(const unsigned char *instruction);
     //instruction: 1 byte MOV instruction
     //memory: memory to read/write data
     void MOV(const unsigned char *instruction, unsigned char *memory);
 
+    //instruction: 2 byte MVI instruction
+    //memory: memory to read/write from
+    void MVI(const unsigned char *instruction, unsigned char *memory);
     //Error called when unimplemented instruction is run
     void UnimplementedInstruction();
 
@@ -304,6 +310,7 @@ public:
     void InitCPU();
 
     State8080();
+    State8080(unsigned int romSize);
     //Returns the opcode for the buffer at the current program counter(pc)
     std::string GetOpcode(unsigned char opcode);
 
