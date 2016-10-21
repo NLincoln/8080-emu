@@ -22,24 +22,77 @@ void JMP(const unsigned char* instruction, State8080* cpuState)
 {
     unsigned int newPC = 0;
     newPC += instruction[1];
-    newPC += instruction[2] * 16;
+    newPC += instruction[2] * 256;
 
     cpuState->pc = newPC;
     return;
 }
 
-void MOV(const unsigned char &instruction, State8080* cpuState)
+void MOV(const unsigned char &instruction, State8080* cpuState, unsigned char *memory)
 {
     unsigned char transfer = 0; //The data being transferred
+    unsigned int memAddress = 0; //Memory address to read/write to
     unsigned short operand1 = (instruction & 0b00111000) / 8;
     unsigned short operand2 = instruction & 0b00000111;
     if(operand1 == 6) //reg1 == M, move to memory
     {
+        memAddress = cpuState->reg_H * 256;
+        memAddress += cpuState->reg_L;
 
+        switch(operand2)
+        {
+            case(0)://B
+                memory[memAddress] = cpuState->reg_B;
+                break;
+            case(1)://C
+                memory[memAddress] = cpuState->reg_C;
+                break;
+            case(2)://D
+                memory[memAddress] = cpuState->reg_D;
+                break;
+            case(3)://E
+                memory[memAddress] = cpuState->reg_E;
+                break;
+            case(4)://H
+                memory[memAddress] = cpuState->reg_H;
+                break;
+            case(5)://L
+                memory[memAddress] = cpuState->reg_L;
+                break;
+            case(7)://A
+                memory[memAddress] = cpuState->reg_A;
+                break;
+        }
     }
     else if(operand2 == 6) //reg2 == M, move from memory
     {
+        memAddress = cpuState->reg_H * 256;
+        memAddress += cpuState->reg_L;
 
+        switch(operand1)
+        {
+            case(0)://B
+                cpuState->reg_B = memory[memAddress];
+                break;
+            case(1)://C
+                cpuState->reg_C = memory[memAddress];
+                break;
+            case(2)://D
+                cpuState->reg_D = memory[memAddress];
+                break;
+            case(3)://E
+                cpuState->reg_E = memory[memAddress];
+                break;
+            case(4)://H
+                cpuState->reg_H = memory[memAddress];
+                break;
+            case(5)://L
+                cpuState->reg_L = memory[memAddress];
+                break;
+            case(7)://A
+                cpuState->reg_A = memory[memAddress];
+                break;
+        }
     }
     else //Register to register copy
     {

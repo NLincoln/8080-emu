@@ -17,6 +17,11 @@ struct State8080
     unsigned char reg_L;
     unsigned char reg_PSW;
     unsigned int pc;
+    bool flagSign;
+    bool flagZero;
+    bool flagAuxCarry;
+    bool flagParity;
+    bool flagCarry;
 };
 
 const std::vector<std::string> OPCODES = {
@@ -279,8 +284,7 @@ const std::vector<std::string> OPCODES = {
 
 };
 
-//Prints the opcode for the buffer at the current program counter(pc)
-//Returns the new program counter
+//Returns the opcode for the buffer at the current program counter(pc)
 std::string GetOpcode(unsigned char opcode);
 
 //instruction: 3 byte JMP instruction
@@ -289,7 +293,9 @@ void JMP(const unsigned char* instruction, State8080* cpuState);
 
 //instruction: 1 byte MOV instruction
 //cpuState: cpu state being modified
-void MOV(const unsigned char* instruction, State8080* cpuState);
+//memory: memory to read/write data
+void MOV(const unsigned char* instruction, State8080* cpuState, unsigned char *memory);
+
 
 //Resets all members of cpuState to 0
 void InitCPU(State8080* cpuState);
