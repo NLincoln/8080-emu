@@ -1,33 +1,37 @@
 //main.cpp
 //Contains code for getting files and running the emulator
 
+#include <fstream>
+#include <vector>
 
 #include "8080Core.h"
 
 int main()
 {
-    FILE *file = fopen("invaders.h", "r");
-    if(file == NULL)
+    std::ifstream file("invaders.h", std::ios::binary | std::ios::ate);
+    if (!file)
     {
-        printf("Error opening file");
+        std::cerr << "Error opening invaders.h file " << std::endl;
         exit(1);
     }
-    
-    fseek(file, 0, SEEK_END);
-    int fsize = ftell(file);
-    
-    unsigned char *buffer = (unsigned char*)malloc(fsize);
-    fseek(file, 0, SEEK_SET);
-    fread(buffer, 1, fsize, file);
-    fclose(file);
-    int programCounter = 0;
-    printf("Beginning Program");
-    while(programCounter < fsize)
+    std::streamsize file_size = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    std::vector<unsigned char> buffer((unsigned long) file_size);
+    if (!file.read((char*)&buffer[0], file_size))
     {
-        programCounter += Disassemble(buffer, programCounter);
-                          
+        std::cerr << "Error reading in space invaders file" << std::endl;
+        exit(2);
     }
-    
-    
+
+    unsigned int programCounter = 0;
+    std::cout << "Beginning Program" << std::endl;
+    while(programCounter < file_size)
+    {
+        programCounter += Disassemble(buffer[programCounter]);
+    }
+
+    file.close();
+
     return 0;
 }

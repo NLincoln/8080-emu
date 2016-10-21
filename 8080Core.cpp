@@ -1,12 +1,8 @@
-
-
 #include "8080Core.h"
 
-int Disassemble(unsigned char* buffer, int pc)
+int Disassemble(unsigned char opcode)
 {
-    unsigned char opcode = buffer[pc];
-    std::cout<<OPCODES[opcode];
-    std::cout<<"\n";
+    std::cout << OPCODES[opcode] << std::endl;
     return 1;
 }
 

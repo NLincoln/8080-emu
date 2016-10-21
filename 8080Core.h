@@ -4,8 +4,9 @@
 #include <cstdlib>
 #include <functional>
 #include <iostream>
+#include <vector>
 
-const std::string OPCODES[256] = {
+const std::vector<std::string> OPCODES = {
     "NOP",
     "LXI B,d16",
     "STAX B",
@@ -264,8 +265,9 @@ const std::string OPCODES[256] = {
     "RST 7"
 
 };
+
 //Prints the opcode for the buffer at the current program counter(pc)
 //Returns the new program counter
-int Disassemble(unsigned char* buffer, int pc);
+int Disassemble(unsigned char opcode);
 
 #endif
