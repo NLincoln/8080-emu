@@ -8,6 +8,7 @@
 
 int main()
 {
+    State8080* cpu;
     std::ifstream file("invaders.h", std::ios::binary | std::ios::ate);
     if (!file)
     {
@@ -28,7 +29,7 @@ int main()
     std::cout << "Beginning Program" << std::endl;
     while(programCounter < file_size)
     {
-        std::cout << GetOpcode(buffer[programCounter]) << std::endl;
+        std::cout << cpu->GetOpcode(buffer[programCounter]) << std::endl;
         programCounter += 1;
     }
 
