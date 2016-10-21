@@ -23,6 +23,8 @@ private:
     bool flagParity;
     bool flagCarry;
 
+    unsigned char* instruction; //Instruction with operands that will be processed
+
 
     const std::vector<std::string> OPCODES = {
             "NOP",
@@ -285,6 +287,8 @@ private:
     };
 
 
+
+
     //instruction: 3 byte JMP instruction
     void JMP(const unsigned char *instruction);
 
@@ -295,13 +299,18 @@ private:
     //Error called when unimplemented instruction is run
     void UnimplementedInstruction();
 
+public:
     //Resets all members of cpuState to 0
     void InitCPU();
 
-public:
+    State8080();
     //Returns the opcode for the buffer at the current program counter(pc)
     std::string GetOpcode(unsigned char opcode);
 
+    //Basepoint for emulating a CPU instruction
+    //Automatically runs the instruction in data specified by the program counter
+    //and modifies memory as necessary
+    void RunInstruction(const unsigned char* data, unsigned char* memory);
 
 };
 #endif

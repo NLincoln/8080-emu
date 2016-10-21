@@ -8,32 +8,37 @@
 
 int main()
 {
-    State8080* cpu;
-    std::ifstream file("invaders.h", std::ios::binary | std::ios::ate);
-    if (!file)
-    {
-        std::cerr << "Error opening invaders.h file " << std::endl;
-        exit(1);
-    }
-    std::streamsize file_size = file.tellg();
-    file.seekg(0, std::ios::beg);
+    State8080* cpu = new State8080();
+    unsigned char* mainRam = (unsigned char*)malloc(0x2000);
+    std::string fileName;
 
-    std::vector<unsigned char> buffer((unsigned long) file_size);
-    if (!file.read((char*)&buffer[0], file_size))
-    {
-        std::cerr << "Error reading in space invaders file" << std::endl;
-        exit(2);
-    }
+    std::cout << "Loading File\n";
+    std::cout << "Please enter filename for emulation\n";
+    std::cin>>fileName;
+
+    std::fstream file(fileName, std::fstream::binary | std::fstream::in);
+    file.seekg(0, std::ios_base::end);
+    int fsize = file.tellg();
+    file.seekg(0, std::ios_base::beg);
+
+    unsigned char* buffer = (unsigned char*)malloc(fsize);
+    file.read((char*)buffer, fsize);
+    cpu->InitCPU();
 
     unsigned int programCounter = 0;
     std::cout << "Beginning Program" << std::endl;
-    while(programCounter < file_size)
+    for(int i = 0; i < 10; i++)
     {
-        std::cout << cpu->GetOpcode(buffer[programCounter]) << std::endl;
+        cpu->RunInstruction(buffer, mainRam);
         programCounter += 1;
     }
 
     file.close();
+    delete(cpu);
+    delete(buffer);
+    delete(mainRam);
+
+    std::cin>>fileName;
 
     return 0;
 }
