@@ -1,8 +1,7 @@
 #include "8080Core.h"
 
-int Disassemble(unsigned char opcode)
+std::string GetOpcode(unsigned char opcode)
 {
-    std::cout << OPCODES[opcode] << std::endl;
-    return 1;
+    return OPCODES[opcode];
 }
 

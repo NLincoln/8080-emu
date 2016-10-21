@@ -28,7 +28,8 @@ int main()
     std::cout << "Beginning Program" << std::endl;
     while(programCounter < file_size)
     {
-        programCounter += Disassemble(buffer[programCounter]);
+        std::cout << GetOpcode(buffer[programCounter]) << std::endl;
+        programCounter += 1;
     }
 
     file.close();

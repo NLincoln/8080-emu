@@ -268,6 +268,6 @@ const std::vector<std::string> OPCODES = {
 
 //Prints the opcode for the buffer at the current program counter(pc)
 //Returns the new program counter
-int Disassemble(unsigned char opcode);
+std::string GetOpcode(unsigned char opcode);
 
 #endif
