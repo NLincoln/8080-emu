@@ -6,6 +6,19 @@
 #include <iostream>
 #include <vector>
 
+struct State8080
+{
+    unsigned char reg_A;
+    unsigned char reg_B;
+    unsigned char reg_C;
+    unsigned char reg_D;
+    unsigned char reg_E;
+    unsigned char reg_H;
+    unsigned char reg_L;
+    unsigned char reg_PSW;
+    unsigned int pc;
+};
+
 const std::vector<std::string> OPCODES = {
     "NOP",
     "LXI B,d16",
@@ -270,4 +283,14 @@ const std::vector<std::string> OPCODES = {
 //Returns the new program counter
 std::string GetOpcode(unsigned char opcode);
 
+//instruction: 3 byte JMP instruction
+//cpuState: cpu state being modified
+void JMP(const unsigned char* instruction, State8080* cpuState);
+
+//instruction: 1 byte MOV instruction
+//cpuState: cpu state being modified
+void MOV(const unsigned char* instruction, State8080* cpuState);
+
+//Resets all members of cpuState to 0
+void InitCPU(State8080* cpuState);
 #endif
