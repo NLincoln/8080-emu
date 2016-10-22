@@ -39,6 +39,7 @@ void State8080::RunInstruction(unsigned char* memory) {
     instruction[1] = memory[pc + 1];
     instruction[2] = memory[pc + 2];
 
+    std::cout << "PC is: " << pc << " ";
     //Increment pc before instruction in case of JMP
     pc++;
 
@@ -164,6 +165,9 @@ void State8080::RunInstruction(unsigned char* memory) {
         case(0xfd):
             CALL(instruction, memory);
             break;
+        case(0xfe):
+            CPI(instruction);
+            break;
         default:
             UnimplementedInstruction();
             break;
@@ -201,11 +205,30 @@ void State8080::CALL(const unsigned char *instruction, unsigned char *memory) {
 
 }
 
+void State8080::CPI(const unsigned char *instruction) {
+    unsigned char data = instruction[1];
+    if(reg_A == data)
+        flagZero = true;
+    else if(reg_A > data)
+    {
+        flagZero = false;
+        flagCarry = false;
+    }
+    else if(reg_A < data)
+    {
+        flagZero = false;
+        flagCarry = true;
+    }
+
+    return;
+}
+
 void State8080::DCR(const unsigned char *instruction) {
     switch(instruction[0])
     {
         case(0x05): //B
             reg_B--;
+        std::cout << "B is " << (int)reg_B << std::endl;
             if(reg_B == 0x00) {
                 flagZero = true;
             }
@@ -248,6 +271,7 @@ void State8080::DCR(const unsigned char *instruction) {
                 flagSign = true;
             break;
         case(0x35): //M
+            //TODO: Implement memory DCR
             break;
         case(0x3c): //A
             reg_A--;
@@ -259,29 +283,22 @@ void State8080::DCR(const unsigned char *instruction) {
     }
 }
 void State8080::INX(const unsigned char *instruction) {
-    unsigned int registerValue;
     switch (instruction[0])
     {
         case(0x03): //B/C
-            registerValue = reg_B * 256;
-            registerValue += reg_C;
-            registerValue++;
-            reg_B = (registerValue & 0b11110000) / 256;
-            reg_C = registerValue & 0b00001111;
+            reg_C++;
+            if(reg_C == 0x00)
+                reg_B++;
             break;
         case(0x13): //D/E
-            registerValue = reg_D * 256;
-            registerValue += reg_E;
-            registerValue++;
-            reg_D = (registerValue & 0b11110000) / 256;
-            reg_E = registerValue & 0b00001111;
+            reg_E++;
+            if(reg_E == 0x00)
+                reg_D++;
             break;
         case(0x23): //H/L
-            registerValue = reg_H * 256;
-            registerValue += reg_H;
-            registerValue++;
-            reg_H = (registerValue & 0b11110000) / 256;
-            reg_H = registerValue & 0b00001111;
+            reg_L++;
+            if(reg_L == 0x00)
+                reg_H++;
             break;
         case(0x33): //SP
             sp++;
@@ -370,8 +387,8 @@ void State8080::MOV(const unsigned char *instruction, unsigned char *memory)
 {
     unsigned char transfer = 0; //The data being transferred
     unsigned int memAddress = 0; //Memory address to read/write to
-    unsigned short operand1 = (*instruction & 0b00111000) / 8;
-    unsigned short operand2 = *instruction & 0b00000111;
+    unsigned short operand1 = (*instruction / 8) % 8;
+    unsigned short operand2 = *instruction % 8;
     if(operand1 == 6) //reg1 == M, move to memory
     {
         memAddress = reg_H * 256;
@@ -530,6 +547,7 @@ void State8080::RET(unsigned char *memory) {
     sp++;
     pc = memory[sp] * 256;
     sp++;
+
     pc += memory[sp];
 }
 

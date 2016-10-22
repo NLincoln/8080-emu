@@ -290,6 +290,8 @@ private:
 
     void CALL(const unsigned char *instruction, unsigned char* memory);
 
+    //instruction: 2 byte CPI instruction
+    void CPI(const unsigned char *instruction);
     //instruction: 1 byte DCR instruction
     void DCR(const unsigned char *instruction);
     //instruction: 1 byte INX instruction
