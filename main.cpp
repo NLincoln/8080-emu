@@ -27,7 +27,7 @@ int main()
 
     unsigned int programCounter = 0;
     std::cout << "Beginning Program" << std::endl;
-    for(int i = 0; i < 25; i++)
+    while(true)
     {
         cpu->RunInstruction(memory);
         programCounter += 1;

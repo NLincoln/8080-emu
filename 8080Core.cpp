@@ -26,6 +26,11 @@ void State8080::InitCPU()
     reg_L = 0;
     reg_PSW = 0;
     pc = 0;
+    flagSign = false;
+    flagZero = false;
+    flagAuxCarry = false;
+    flagCarry = false;
+    flagParity = false;
 }
 void State8080::RunInstruction(unsigned char* memory) {
 
@@ -60,6 +65,25 @@ void State8080::RunInstruction(unsigned char* memory) {
         case(0x36):
         case(0x3e):
             MVI(instruction, memory);
+            break;
+        case(0x0a):
+        case(0x1a):
+            LDAX(instruction, memory);
+        case(0x03):
+        case(0x13):
+        case(0x23):
+        case(0x33):
+            INX(instruction);
+            break;
+        case(0x05):
+        case(0x0c):
+        case(0x15):
+        case(0x1c):
+        case(0x25):
+        case(0x2c):
+        case(0x35):
+        case(0x3c):
+            DCR(instruction);
             break;
         case(0x40):
         case(0x41):
@@ -126,8 +150,13 @@ void State8080::RunInstruction(unsigned char* memory) {
         case(0x7f):
             MOV(instruction, memory);
             break;
+        case(0xc2):
         case(0xc3):
             JMP(instruction);
+            break;
+        case(0xc9):
+        case(0xd9):
+            RET(memory);
             break;
         case(0xcd):
         case(0xdd):
@@ -151,16 +180,17 @@ void State8080::CALL(const unsigned char *instruction, unsigned char *memory) {
     unsigned char lowAddress = instruction[1];
     unsigned char highAddress = instruction[2];
 
-    /*
+
     std::cout << "Stack pointer is " << sp << std::endl;
     std::cout << "Low address is " << (int)lowAddress << std::endl;
     std::cout << "High address is " << (int)highAddress << std::endl;
-     */
+
     //Push the program counter onto the stack
     pc += 2; //3 byte instruction
-    memory[sp] = pc & 0b00001111;
+    memory[sp] = pc % 256;
     sp--;
-    memory[sp] = pc & 0b11110000;
+    memory[sp] = (pc / 256) % 256;
+    sp--;
 
     pc = lowAddress;
     pc += highAddress * 256;
@@ -170,15 +200,143 @@ void State8080::CALL(const unsigned char *instruction, unsigned char *memory) {
     return;
 
 }
+
+void State8080::DCR(const unsigned char *instruction) {
+    switch(instruction[0])
+    {
+        case(0x05): //B
+            reg_B--;
+            if(reg_B == 0x00) {
+                flagZero = true;
+            }
+            if(reg_B == 0xFF)
+                flagSign = true;
+            break;
+        case(0x0c): //C
+            reg_C--;
+            if(reg_C == 0x00)
+                flagZero = true;
+            if(reg_C == 0xFF)
+                flagSign = true;
+            break;
+        case(0x15): //D
+            reg_D--;
+            if(reg_D == 0x00)
+                flagZero = true;
+            if(reg_D == 0xFF)
+                flagSign = true;
+            break;
+        case(0x1c): //E
+            reg_E--;
+            if(reg_E == 0x00)
+                flagZero = true;
+            if(reg_E == 0xFF)
+                flagSign = true;
+            break;
+        case(0x25): //H
+            reg_H--;
+            if(reg_H == 0x00)
+                flagZero = true;
+            if(reg_H == 0xFF)
+                flagSign = true;
+            break;
+        case(0x2c): //L
+            reg_L--;
+            if(reg_L == 0x00)
+                flagZero = true;
+            if(reg_L == 0xFF)
+                flagSign = true;
+            break;
+        case(0x35): //M
+            break;
+        case(0x3c): //A
+            reg_A--;
+            if(reg_A == 0x00)
+                flagZero = true;
+            if(reg_A == 0xFF)
+                flagSign = true;
+            break;
+    }
+}
+void State8080::INX(const unsigned char *instruction) {
+    unsigned int registerValue;
+    switch (instruction[0])
+    {
+        case(0x03): //B/C
+            registerValue = reg_B * 256;
+            registerValue += reg_C;
+            registerValue++;
+            reg_B = (registerValue & 0b11110000) / 256;
+            reg_C = registerValue & 0b00001111;
+            break;
+        case(0x13): //D/E
+            registerValue = reg_D * 256;
+            registerValue += reg_E;
+            registerValue++;
+            reg_D = (registerValue & 0b11110000) / 256;
+            reg_E = registerValue & 0b00001111;
+            break;
+        case(0x23): //H/L
+            registerValue = reg_H * 256;
+            registerValue += reg_H;
+            registerValue++;
+            reg_H = (registerValue & 0b11110000) / 256;
+            reg_H = registerValue & 0b00001111;
+            break;
+        case(0x33): //SP
+            sp++;
+            break;
+    }
+
+    return;
+}
 void State8080::JMP(const unsigned char* instruction)
 {
-    unsigned int newPC = 0;
-    newPC += instruction[1];
-    newPC += instruction[2] * 256;
-    pc = newPC;
+    unsigned int newPC;
+    switch(instruction[0])
+    {
+        case(0xc2): //JNZ
+            if(!flagZero)
+            {
+                newPC = instruction[1];
+                newPC += instruction[2] * 256;
+                pc = newPC;
+                break;
+            }
+            else
+            {
+                pc += 2; //Continue through 3 byte instruction
+                break;
+            }
+        case(0xc3): //JMP
+
+            newPC = instruction[1];
+            newPC += instruction[2] * 256;
+            pc = newPC;
+            break;
+    }
     return;
 }
 
+void State8080::LDAX(const unsigned char *instruction, unsigned char *memory) {
+
+    unsigned int memAddress;
+    switch(instruction[0])
+    {
+        case(0x0a): //B/C
+            memAddress = reg_C;
+            memAddress += reg_B * 256;
+            reg_A = memory[memAddress];
+            break;
+        case(0x1a): //D/E
+            memAddress = reg_E;
+            memAddress += reg_D * 256;
+            reg_A = memory[memAddress];
+            break;
+    }
+
+    return;
+}
 void State8080::LXI(const unsigned char *instruction) {
     unsigned char targetRegPair = instruction[0]; //Register pair to write to
     unsigned char lowData = instruction[1];
@@ -366,5 +524,12 @@ void State8080::MVI(const unsigned char *instruction, unsigned char *memory) {
 
     pc++; //2 byte instruction
     return;
+}
+
+void State8080::RET(unsigned char *memory) {
+    sp++;
+    pc = memory[sp] * 256;
+    sp++;
+    pc += memory[sp];
 }
 

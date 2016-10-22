@@ -290,8 +290,17 @@ private:
 
     void CALL(const unsigned char *instruction, unsigned char* memory);
 
-    //instruction: 3 byte JMP instruction
+    //instruction: 1 byte DCR instruction
+    void DCR(const unsigned char *instruction);
+    //instruction: 1 byte INX instruction
+    void INX(const unsigned char *instruction);
+
+    //instruction: 3 byte JMP/JNZ instruction
     void JMP(const unsigned char *instruction);
+
+    //instruction: 1 byte LDAX instruction
+    //memory: memory to read/write data
+    void LDAX(const unsigned char *instruction, unsigned char *memory);
 
     //instruction: 3 byte LXI instruction
     void LXI(const unsigned char *instruction);
@@ -302,6 +311,10 @@ private:
     //instruction: 2 byte MVI instruction
     //memory: memory to read/write from
     void MVI(const unsigned char *instruction, unsigned char *memory);
+
+
+    //memory: memory to read/write from
+    void RET(unsigned char *memory);
     //Error called when unimplemented instruction is run
     void UnimplementedInstruction();
 
