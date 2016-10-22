@@ -27,12 +27,12 @@ void State8080::InitCPU()
     reg_PSW = 0;
     pc = 0;
 }
-void State8080::RunInstruction(const unsigned char *data, unsigned char *memory) {
+void State8080::RunInstruction(unsigned char* memory) {
 
     //Fill instruction buffer
-    instruction[0] = data[pc];
-    instruction[1] = data[pc + 1];
-    instruction[2] = data[pc + 2];
+    instruction[0] = memory[pc];
+    instruction[1] = memory[pc + 1];
+    instruction[2] = memory[pc + 2];
 
     //Increment pc before instruction in case of JMP
     pc++;
@@ -144,8 +144,6 @@ void State8080::RunInstruction(const unsigned char *data, unsigned char *memory)
 }
 void State8080::UnimplementedInstruction() {
     std::cout << "FATAL ERROR: UNIMPLEMENTED INSTRUCTION\n";
-    std::string test;
-    std::cin>>test;
     exit(1);
 }
 
@@ -153,14 +151,16 @@ void State8080::CALL(const unsigned char *instruction, unsigned char *memory) {
     unsigned char lowAddress = instruction[1];
     unsigned char highAddress = instruction[2];
 
+    /*
     std::cout << "Stack pointer is " << sp << std::endl;
     std::cout << "Low address is " << (int)lowAddress << std::endl;
     std::cout << "High address is " << (int)highAddress << std::endl;
+     */
     //Push the program counter onto the stack
     pc += 2; //3 byte instruction
-    memory[sp - romDataSize] = pc & 0b00001111;
+    memory[sp] = pc & 0b00001111;
     sp--;
-    memory[sp - romDataSize] = pc & 0b11110000;
+    memory[sp] = pc & 0b11110000;
 
     pc = lowAddress;
     pc += highAddress * 256;

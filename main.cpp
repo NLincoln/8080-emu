@@ -8,7 +8,7 @@
 
 int main()
 {
-    unsigned char* mainRam = (unsigned char*)malloc(0x2000);
+    unsigned char* memory = new unsigned char[0x3fff];
     std::string fileName;
 
     std::cout << "Loading File\n";
@@ -17,11 +17,10 @@ int main()
 
     std::fstream file(fileName, std::fstream::binary | std::fstream::in);
     file.seekg(0, std::ios_base::end);
-    int fsize = file.tellg();
+    long fsize = file.tellg();
     file.seekg(0, std::ios_base::beg);
 
-    unsigned char* buffer = (unsigned char*)malloc(fsize);
-    file.read((char*)buffer, fsize);
+    file.read((char*)memory, fsize);
 
     State8080* cpu = new State8080(fsize);
     cpu->InitCPU();
@@ -30,16 +29,14 @@ int main()
     std::cout << "Beginning Program" << std::endl;
     for(int i = 0; i < 25; i++)
     {
-        cpu->RunInstruction(buffer, mainRam);
+        cpu->RunInstruction(memory);
         programCounter += 1;
     }
 
     file.close();
     delete(cpu);
-    delete(buffer);
-    delete(mainRam);
+    delete(memory);
 
-    std::cin>>fileName;
 
     return 0;
 }

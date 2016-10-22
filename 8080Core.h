@@ -317,7 +317,7 @@ public:
     //Basepoint for emulating a CPU instruction
     //Automatically runs the instruction in data specified by the program counter
     //and modifies memory as necessary
-    void RunInstruction(const unsigned char* data, unsigned char* memory);
+    void RunInstruction(unsigned char* memory);
 
 };
 #endif
