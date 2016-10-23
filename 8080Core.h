@@ -23,6 +23,7 @@ private:
     bool flagAuxCarry;
     bool flagParity;
     bool flagCarry;
+    bool interruptsEnabled;
 
     unsigned char* instruction; //Instruction with operands that will be processed
     unsigned int romDataSize; //Size of rom file to offset stack pointer with
@@ -291,6 +292,9 @@ private:
     //instruction: 2 byte ADI instruction
     void ADI(const unsigned char *instruction);
 
+    //instruction:: 1 byte ANA instruction
+    //memory:: memory to read from
+    void ANA(const unsigned char *instruction, unsigned char *memory);
     //instruction: 2 byte ANI instruction
     void ANI(const unsigned char *instruction);
 
@@ -303,6 +307,9 @@ private:
     void DAD(const unsigned char *instruction);
     //instruction: 1 byte DCR instruction
     void DCR(const unsigned char *instruction);
+
+    //Enables interrupts
+    void EI();
     //instruction: 1 byte INX instruction
     void INX(const unsigned char *instruction);
 
@@ -346,6 +353,10 @@ private:
     void STA(const unsigned char *instruction, unsigned char *memory);
 
     void XCHG();
+
+    //instruction: 1 byte XRA instruction
+    //memory: memory to read from
+    void XRA(const unsigned char *instruction, unsigned char *memory);
     //Error called when unimplemented instruction is run
     void UnimplementedInstruction();
 
@@ -363,7 +374,8 @@ public:
     //and modifies memory as necessary
     void RunInstruction(unsigned char* memory);
 
-    int breakpoint;
+    int breakpoint; //Halts processor after this number of instructions
+                    //used for debugging
 
 };
 #endif

@@ -32,6 +32,7 @@ void State8080::InitCPU()
     flagAuxCarry = false;
     flagCarry = false;
     flagParity = false;
+    interruptsEnabled = false;
 }
 void State8080::RunInstruction(unsigned char* memory) {
 
@@ -167,6 +168,26 @@ void State8080::RunInstruction(unsigned char* memory) {
         case(0x7f):
             MOV(instruction, memory);
             break;
+        case(0xa0):
+        case(0xa1):
+        case(0xa2):
+        case(0xa3):
+        case(0xa4):
+        case(0xa5):
+        case(0xa6):
+        case(0xa7):
+            ANA(instruction, memory);
+            break;
+        case(0xa8):
+        case(0xa9):
+        case(0xaa):
+        case(0xab):
+        case(0xac):
+        case(0xad):
+        case(0xae):
+        case(0xaf):
+            XRA(instruction, memory);
+            break;
         case(0xe6):
             ANI(instruction);
             break;
@@ -205,6 +226,9 @@ void State8080::RunInstruction(unsigned char* memory) {
         case(0xfd):
             CALL(instruction, memory);
             break;
+        case(0xfb):
+            EI();
+            break;
         case(0xfe):
             CPI(instruction);
             break;
@@ -238,6 +262,46 @@ void State8080::ADI(const unsigned char *instruction) {
     return;
 
 }
+void State8080::ANA(const unsigned char *instruction, unsigned char *memory) {
+    unsigned int memAddress = reg_L;
+    memAddress += reg_H * 256;
+    switch (instruction[0])
+    {
+        case(0xa0): //B
+            reg_A = reg_A & reg_B;
+            break;
+        case(0xa1): //C
+            reg_A = reg_A & reg_C;
+            break;
+        case(0xa2): //D
+            reg_A = reg_A & reg_D;
+            break;
+        case(0xa3): //E
+            reg_A = reg_A & reg_E;
+            break;
+        case(0xa4): //H
+            reg_A = reg_A & reg_H;
+            break;
+        case(0xa5): //L
+            reg_A = reg_A & reg_L;
+            break;
+        case(0xa6): //M
+            reg_A = reg_A & memory[memAddress];
+            break;
+        case(0xa7): //A
+            reg_A = reg_A & reg_A;
+            break;
+
+    }
+
+    //Set flags
+    flagCarry = false;
+    if(reg_A == 0)
+        flagZero = true;
+    else
+        flagZero = false;
+    return;
+}
 void State8080::ANI(const unsigned char *instruction) {
     unsigned char operand = instruction[1];
     flagCarry = false;
@@ -260,7 +324,7 @@ void State8080::CALL(const unsigned char *instruction, unsigned char *memory) {
     memory[sp] = (pc / 256) % 256;
     sp--;
     memory[sp] = pc % 256;
-    
+
     pc = lowAddress;
     pc += highAddress * 256;
 
@@ -412,6 +476,10 @@ void State8080::DCR(const unsigned char *instruction) {
                 flagSign = false;
             break;
     }
+}
+void State8080::EI() {
+    interruptsEnabled = true;
+    return;
 }
 void State8080::INX(const unsigned char *instruction) {
     switch (instruction[0])
@@ -682,7 +750,7 @@ void State8080::MVI(const unsigned char *instruction, unsigned char *memory) {
 
 void State8080::OUT(const unsigned char *instruction) {
     pc++; //2 byte instruction
-    std::cout << "Outputting to " << (int)instruction[0] << std::endl;
+    std::cout << "Outputting to " << (int)instruction[1] << std::endl;
     return;
 }
 void State8080::POP(const unsigned char *instruction, unsigned char *memory) {
@@ -758,7 +826,6 @@ void State8080::STA(const unsigned char *instruction, unsigned char *memory) {
     memAddress += instruction[2] * 256;
     memory[memAddress] = reg_A;
     pc += 2; //3byte instruction
-    breakpoint = 100;
     return;
 }
 
@@ -771,6 +838,51 @@ void State8080::XCHG() {
     tempCopy = reg_L;
     reg_L = reg_E;
     reg_E = tempCopy;
+
+    return;
+
+}
+
+void State8080::XRA(const unsigned char *instruction, unsigned char *memory) {
+    unsigned int memAddress = reg_L;
+    memAddress += reg_H * 256;
+
+    switch(instruction[0])
+    {
+        case(0xa8)://B
+            reg_A = reg_A ^ reg_B;
+            break;
+        case(0xa9)://C
+            reg_A = reg_A ^ reg_C;
+            break;
+        case(0xaa)://D
+            reg_A = reg_A ^ reg_D;
+            break;
+        case(0xab)://E
+            reg_A = reg_A ^ reg_E;
+            break;
+        case(0xac)://H
+            reg_A = reg_A ^ reg_H;
+            break;
+        case(0xad)://L
+            reg_A = reg_A ^ reg_L;
+            break;
+        case(0xae)://M
+            reg_A = reg_A ^ memory[memAddress];
+            break;
+        case(0xaf)://A
+            reg_A = reg_A ^ reg_A;
+            break;
+    }
+
+    //Set flags
+    flagCarry = false;
+    flagAuxCarry = false;
+
+    if(reg_A == 0)
+        flagZero = true;
+    else
+        flagZero = false;
 
     return;
 
