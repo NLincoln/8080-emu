@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "8080Core.h"
+#include "VideoSystem.h"
 
 int main()
 {
@@ -21,10 +22,11 @@ int main()
     file.seekg(0, std::ios_base::beg);
 
     file.read((char*)memory, fsize);
-
+    file.close();
     State8080* cpu = new State8080(fsize);
     cpu->InitCPU();
 
+    TerminalOutput screen;
     unsigned int programCounter = 0;
     std::cout << "Beginning Program" << std::endl;
     while(true)
@@ -32,14 +34,16 @@ int main()
         cpu->RunInstruction(memory);
         programCounter += 1;
         if(cpu->breakpoint == 0)
-            exit(4);
+            break;
         if(cpu->breakpoint > 0)
             cpu->breakpoint--;
     }
 
-    file.close();
-    delete(cpu);
-    delete(memory);
+
+    screen.ClearScreen();
+    screen.DrawScreen(memory, 7168, 224);
+    //delete cpu;
+
 
 
     return 0;

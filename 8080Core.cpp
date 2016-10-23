@@ -1,5 +1,5 @@
 #include "8080Core.h"
-
+#include <cmath>
 std::string State8080::GetOpcode(unsigned char opcode)
 {
     return OPCODES[opcode];
@@ -385,7 +385,7 @@ void State8080::DAD(const unsigned char *instruction) {
 
     //Store result
     reg_L = tempAdd % 256;
-    reg_H = (tempAdd / 256) % 256;
+    reg_H = (int)(tempAdd / 256) % 256;
 
     return;
 }
@@ -479,6 +479,7 @@ void State8080::DCR(const unsigned char *instruction) {
 }
 void State8080::EI() {
     interruptsEnabled = true;
+    breakpoint = 100;
     return;
 }
 void State8080::INX(const unsigned char *instruction) {
@@ -567,16 +568,16 @@ void State8080::LXI(const unsigned char *instruction) {
     switch(targetRegPair)
     {
         case(0x01): //B/C
-            reg_B = lowData;
-            reg_C = highData;
+            reg_B = highData;
+            reg_C = lowData;
             break;
         case(0x11): //D/E
-            reg_D = lowData;
-            reg_E = highData;
+            reg_D = highData;
+            reg_E = lowData;
             break;
         case(0x21): //H/L
-            reg_H = lowData;
-            reg_L = highData;
+            reg_H = highData;
+            reg_L = lowData;
             break;
         case(0x31): //SP
             sp = lowData;
@@ -736,7 +737,7 @@ void State8080::MVI(const unsigned char *instruction, unsigned char *memory) {
             break;
         case(0x36): //M
             memAddress = reg_L;
-            memAddress = reg_H * (unsigned int)256;
+            memAddress += reg_H * (unsigned int)256;
             memory[memAddress] = data;
             break;
         case(0x3e): //A
