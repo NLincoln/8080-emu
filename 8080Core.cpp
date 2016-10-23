@@ -14,6 +14,7 @@ State8080::State8080(unsigned int romSize)
 {
     instruction = new unsigned char[3];
     romDataSize = romSize;
+    breakpoint = -1;
 }
 void State8080::InitCPU()
 {
@@ -67,6 +68,9 @@ void State8080::RunInstruction(unsigned char* memory) {
         case(0x3e):
             MVI(instruction, memory);
             break;
+        case(0x0f):
+            RRC();
+            break;
         case(0x0a):
         case(0x1a):
             LDAX(instruction, memory);
@@ -77,14 +81,26 @@ void State8080::RunInstruction(unsigned char* memory) {
             INX(instruction);
             break;
         case(0x05):
-        case(0x0c):
+        case(0x0d):
         case(0x15):
-        case(0x1c):
+        case(0x1d):
         case(0x25):
-        case(0x2c):
+        case(0x2d):
         case(0x35):
-        case(0x3c):
+        case(0x3d):
             DCR(instruction);
+            break;
+        case(0x09):
+        case(0x19):
+        case(0x29):
+        case(0x39):
+            DAD(instruction);
+            break;
+        case(0x32):
+            STA(instruction, memory);
+            break;
+        case(0x3a):
+            LDA(instruction, memory);
             break;
         case(0x40):
         case(0x41):
@@ -151,6 +167,18 @@ void State8080::RunInstruction(unsigned char* memory) {
         case(0x7f):
             MOV(instruction, memory);
             break;
+        case(0xe6):
+            ANI(instruction);
+            break;
+        case(0xc6):
+            ADI(instruction);
+            break;
+        case(0xc1):
+        case(0xd1):
+        case(0xe1):
+        case(0xf1):
+            POP(instruction, memory);
+            break;
         case(0xc2):
         case(0xc3):
             JMP(instruction);
@@ -158,6 +186,18 @@ void State8080::RunInstruction(unsigned char* memory) {
         case(0xc9):
         case(0xd9):
             RET(memory);
+            break;
+        case(0xd3):
+            OUT(instruction);
+            break;
+        case(0xc5):
+        case(0xd5):
+        case(0xe5):
+        case(0xf5):
+            PUSH(instruction, memory);
+            break;
+        case(0xeb):
+            XCHG();
             break;
         case(0xcd):
         case(0xdd):
@@ -180,6 +220,31 @@ void State8080::UnimplementedInstruction() {
     exit(1);
 }
 
+void State8080::ADI(const unsigned char *instruction) {
+    unsigned char operand = instruction[1];
+    unsigned int tempAdd;
+    tempAdd = operand + reg_A;
+    if((tempAdd / 256) > 0)
+        flagCarry = true;
+    else
+        flagCarry = false;
+    reg_A = (unsigned char)(tempAdd % 256);
+
+    if(reg_A == 0)
+        flagZero = true;
+    else
+        flagZero = false;
+    pc++;
+    return;
+
+}
+void State8080::ANI(const unsigned char *instruction) {
+    unsigned char operand = instruction[1];
+    flagCarry = false;
+    reg_A = reg_A & operand;
+    pc++; //2 byte instruction
+    return;
+}
 void State8080::CALL(const unsigned char *instruction, unsigned char *memory) {
     unsigned char lowAddress = instruction[1];
     unsigned char highAddress = instruction[2];
@@ -223,6 +288,43 @@ void State8080::CPI(const unsigned char *instruction) {
     return;
 }
 
+void State8080::DAD(const unsigned char *instruction) {
+    unsigned char operand = instruction[0];
+    unsigned int tempAdd;
+    tempAdd = reg_L;
+    tempAdd += reg_H * 256;
+
+    switch(operand)
+    {
+        case(0x09): //B/C
+            tempAdd += reg_C;
+            tempAdd += reg_B * 256;
+            break;
+        case(0x19): //D/E
+            tempAdd += reg_E;
+            tempAdd += reg_D * 256;
+            break;
+        case(0x29): //H/L
+            tempAdd += reg_L;
+            tempAdd += reg_H * 256;
+            break;
+        case(0x39): //SP
+            tempAdd += sp;
+            break;
+    }
+
+    //Check for carry
+    if((tempAdd / 65536) > 0)
+        flagCarry = true;
+    else
+        flagCarry = false;
+
+    //Store result
+    reg_L = tempAdd % 256;
+    reg_H = (tempAdd / 256) % 256;
+
+    return;
+}
 void State8080::DCR(const unsigned char *instruction) {
     switch(instruction[0])
     {
@@ -232,53 +334,82 @@ void State8080::DCR(const unsigned char *instruction) {
             if(reg_B == 0x00) {
                 flagZero = true;
             }
+            else
+                flagZero = false;
             if(reg_B == 0xFF)
                 flagSign = true;
+            else
+                flagSign = false;
             break;
-        case(0x0c): //C
+        case(0x0d): //C
             reg_C--;
             if(reg_C == 0x00)
                 flagZero = true;
+            else
+                flagZero = false;
             if(reg_C == 0xFF)
                 flagSign = true;
+            else
+                flagSign = false;
             break;
         case(0x15): //D
             reg_D--;
             if(reg_D == 0x00)
                 flagZero = true;
+            else
+                flagZero = false;
             if(reg_D == 0xFF)
                 flagSign = true;
+            else
+                flagSign = false;
             break;
-        case(0x1c): //E
+        case(0x1d): //E
             reg_E--;
             if(reg_E == 0x00)
                 flagZero = true;
+            else
+                flagZero = false;
             if(reg_E == 0xFF)
                 flagSign = true;
+            else
+                flagSign = false;
             break;
         case(0x25): //H
             reg_H--;
             if(reg_H == 0x00)
                 flagZero = true;
+            else
+                flagZero = false;
             if(reg_H == 0xFF)
                 flagSign = true;
+            else
+                flagSign = false;
             break;
-        case(0x2c): //L
+        case(0x2d): //L
             reg_L--;
             if(reg_L == 0x00)
                 flagZero = true;
+            else
+                flagZero = false;
             if(reg_L == 0xFF)
                 flagSign = true;
+            else
+                flagSign = false;
             break;
         case(0x35): //M
             //TODO: Implement memory DCR
             break;
-        case(0x3c): //A
+        case(0x3d): //A
             reg_A--;
+        std::cout<< "Reg A is: " << (int)reg_A << std::endl;
             if(reg_A == 0x00)
                 flagZero = true;
+            else
+                flagZero = false;
             if(reg_A == 0xFF)
                 flagSign = true;
+            else
+                flagSign = false;
             break;
     }
 }
@@ -334,7 +465,13 @@ void State8080::JMP(const unsigned char* instruction)
     }
     return;
 }
-
+void State8080::LDA(const unsigned char *instruction, unsigned char *memory) {
+    unsigned int memAddress = instruction[1];
+    memAddress += instruction[2] * 256;
+    reg_A = memory[memAddress];
+    pc += 2; //3 byte instruction
+    return;
+}
 void State8080::LDAX(const unsigned char *instruction, unsigned char *memory) {
 
     unsigned int memAddress;
@@ -543,11 +680,99 @@ void State8080::MVI(const unsigned char *instruction, unsigned char *memory) {
     return;
 }
 
+void State8080::OUT(const unsigned char *instruction) {
+    pc++; //2 byte instruction
+    std::cout << "Outputting to " << (int)instruction[0] << std::endl;
+    return;
+}
+void State8080::POP(const unsigned char *instruction, unsigned char *memory) {
+    switch(instruction[0])
+    {
+        case (0xc1): //B/C
+            reg_C = memory[sp];
+            sp++;
+            reg_B = memory[sp];
+            sp++;
+            break;
+        case (0xd1): //D/E
+            reg_E = memory[sp];
+            sp++;
+            reg_D = memory[sp];
+            sp++;
+            break;
+        case (0xe1): //H/L
+            reg_L = memory[sp];
+            sp++;
+            reg_H = memory[sp];
+            sp++;
+            break;
+        case (0xf1): //PSW //TODO: flag -> byte conversion
+            break;
+    }
+
+}
+void State8080::PUSH(const unsigned char *instruction, unsigned char *memory) {
+    unsigned char operand = instruction[0];
+    switch (operand)
+    {
+        case(0xc5): //B/C
+            sp--;
+            memory[sp] = reg_B;
+            sp--;
+            memory[sp] = reg_C;
+            break;
+        case(0xd5): //D/E
+            sp--;
+            memory[sp] = reg_D;
+            sp--;
+            memory[sp] = reg_E;
+            break;
+        case(0xe5): //H/L
+            sp--;
+            memory[sp] = reg_H;
+            sp--;
+            memory[sp] = reg_L;
+            break;
+        case(0xf5): //TODO: Properly convert flags to byte
+            break;
+    }
+}
+
 void State8080::RET(unsigned char *memory) {
     sp++;
     pc = memory[sp] * 256;
     sp++;
 
     pc += memory[sp];
+}
+void State8080::RRC() {
+    flagCarry = (bool)(reg_A % 2);
+    reg_A /= 2;
+
+    reg_A += (unsigned char)flagCarry * 128;
+
+    return;
+}
+void State8080::STA(const unsigned char *instruction, unsigned char *memory) {
+    unsigned int memAddress = instruction[1];
+    memAddress += instruction[2] * 256;
+    memory[memAddress] = reg_A;
+    pc += 2; //3byte instruction
+    breakpoint = 100;
+    return;
+}
+
+void State8080::XCHG() {
+    unsigned char tempCopy;
+    tempCopy = reg_H;
+    reg_H = reg_D;
+    reg_D = tempCopy;
+
+    tempCopy = reg_L;
+    reg_L = reg_E;
+    reg_E = tempCopy;
+
+    return;
+
 }
 

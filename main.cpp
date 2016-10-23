@@ -31,6 +31,10 @@ int main()
     {
         cpu->RunInstruction(memory);
         programCounter += 1;
+        if(cpu->breakpoint == 0)
+            exit(4);
+        if(cpu->breakpoint > 0)
+            cpu->breakpoint--;
     }
 
     file.close();

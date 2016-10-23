@@ -288,10 +288,19 @@ private:
     };
 
 
+    //instruction: 2 byte ADI instruction
+    void ADI(const unsigned char *instruction);
+
+    //instruction: 2 byte ANI instruction
+    void ANI(const unsigned char *instruction);
+
     void CALL(const unsigned char *instruction, unsigned char* memory);
 
     //instruction: 2 byte CPI instruction
     void CPI(const unsigned char *instruction);
+
+    //instruction: 1 byte DAD instruction
+    void DAD(const unsigned char *instruction);
     //instruction: 1 byte DCR instruction
     void DCR(const unsigned char *instruction);
     //instruction: 1 byte INX instruction
@@ -300,6 +309,9 @@ private:
     //instruction: 3 byte JMP/JNZ instruction
     void JMP(const unsigned char *instruction);
 
+    //instruction: 3 byte LDA instruction
+    //memory: memory to read from
+    void LDA(const unsigned char *instruction, unsigned char *memory);
     //instruction: 1 byte LDAX instruction
     //memory: memory to read/write data
     void LDAX(const unsigned char *instruction, unsigned char *memory);
@@ -314,9 +326,26 @@ private:
     //memory: memory to read/write from
     void MVI(const unsigned char *instruction, unsigned char *memory);
 
+    //instruction: 2 byte OUT instruction
+    //TODO: What does this do?
+    void OUT(const unsigned char *instruction);
+    //instruction: 1 byte POP instruction
+    //memory: memory to read/write from
+    void POP(const unsigned char *instruction, unsigned char *memory);
+    //instruction: 1 byte PUSH instruction
+    //memory: memory to read/write from
+    void PUSH(const unsigned char *instruction, unsigned char *memory);
 
     //memory: memory to read/write from
     void RET(unsigned char *memory);
+
+    void RRC();
+
+    //instruction: 3 byte STA instruction
+    //memory: memory to write to
+    void STA(const unsigned char *instruction, unsigned char *memory);
+
+    void XCHG();
     //Error called when unimplemented instruction is run
     void UnimplementedInstruction();
 
@@ -333,6 +362,8 @@ public:
     //Automatically runs the instruction in data specified by the program counter
     //and modifies memory as necessary
     void RunInstruction(unsigned char* memory);
+
+    int breakpoint;
 
 };
 #endif
