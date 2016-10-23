@@ -256,11 +256,11 @@ void State8080::CALL(const unsigned char *instruction, unsigned char *memory) {
 
     //Push the program counter onto the stack
     pc += 2; //3 byte instruction
-    memory[sp] = pc % 256;
     sp--;
     memory[sp] = (pc / 256) % 256;
     sp--;
-
+    memory[sp] = pc % 256;
+    
     pc = lowAddress;
     pc += highAddress * 256;
 
@@ -739,11 +739,11 @@ void State8080::PUSH(const unsigned char *instruction, unsigned char *memory) {
 }
 
 void State8080::RET(unsigned char *memory) {
+    pc = memory[sp];
     sp++;
-    pc = memory[sp] * 256;
+    pc += memory[sp] * 256;
     sp++;
-
-    pc += memory[sp];
+    return;
 }
 void State8080::RRC() {
     flagCarry = (bool)(reg_A % 2);
