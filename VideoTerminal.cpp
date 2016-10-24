@@ -24,9 +24,9 @@ void TerminalOutput::DrawByte(const unsigned char byte) {
         remainingByte = (unsigned char)(byte / exp2(i));
         pixel = (bool)(remainingByte % 2);
         if(pixel)
-            std::cout << "1";
-        else
             std::cout << ".";
+        else
+            std::cout << " ";
     }
 
 
@@ -41,16 +41,16 @@ void TerminalOutput::DrawScreen(const unsigned char *memory, const unsigned int 
 
     while(screenPos < vramSize)
     {
-        while(rowPos < 224)
+        while(rowPos < 256)
         {
-            vramAddress += 1;
             DrawByte(memory[vramAddress]);
+            vramAddress += 1;
             screenPos += 1;
             rowPos += 8;
         }
         std::cout << "\n";
         row++;
-        std::cout << row;
+        //std::cout << row;
         rowPos = 0;
     }
 
