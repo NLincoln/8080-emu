@@ -33,7 +33,7 @@ void TerminalOutput::DrawByte(const unsigned char byte) {
     return;
 }
 
-void TerminalOutput::DrawScreen(const unsigned char *memory, const unsigned int vramSize, const int rowSize) {
+void TerminalOutput::DrawScreen(const unsigned char *memory, const unsigned int vramSize) {
     unsigned int rowPos = 0;
     unsigned int screenPos = 0;
     unsigned int row = 0;
@@ -53,6 +53,5 @@ void TerminalOutput::DrawScreen(const unsigned char *memory, const unsigned int 
         //std::cout << row;
         rowPos = 0;
     }
-
     return;
 }

@@ -26,7 +26,8 @@ int main()
     State8080* cpu = new State8080(fsize);
     cpu->InitCPU();
 
-    TerminalOutput screen;
+    VideoSDL screen;
+    screen.InitScreen();
     unsigned int programCounter = 0;
     std::cout << "Beginning Program" << std::endl;
     while(true)
@@ -40,9 +41,11 @@ int main()
     }
 
 
-    screen.ClearScreen();
-    screen.DrawScreen(memory, 7168, 224);
-    //delete cpu;
+
+    screen.DrawFrame(memory, 7168);
+
+    std::cin>>fileName; //Wait for input before shutting down
+    screen.Shutdown();
 
 
 
